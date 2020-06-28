@@ -19,13 +19,13 @@ splitmode = 'uniform'
 # splitmode = 'partition'
 
 repeat = 5
-total_test_times = 1
+total_test_times = 5
 random_seeds = range(0, total_test_times * repeat, repeat)
 
 # test_startpoint should be greater than training_size
-training_size = 10
+training_size = 15
 test_size = 500
-test_startpoint = 50
+test_startpoint = 100
 
 # select which algorithm to test
 # algorithm = 'global'
@@ -39,9 +39,9 @@ scenario_length, train_fail_num, test_fail_num = 100, 50, 50
 
 # select dataset
 # dataset = './dataset/btcusd.csv'
-# dataset = './dataset/LondonBike.csv'
+dataset = './dataset/LondonBike.csv'
 # dataset = './dataset/StockData.csv'
-dataset = './dataset/RedditMachineLearning.csv'
+# dataset = './dataset/RedditMachineLearning.csv'
 # dataset = './dataset/JoeBidenTweets.csv'
 # dataset = './dataset/911.csv'
 # dataset = './dataset/IndianCOVID19.csv'
@@ -50,7 +50,10 @@ dataset = './dataset/RedditMachineLearning.csv'
 # dataset = './dataset/sensor_same_deleted.csv'
 
 # set separation of x, you can choose arbitrarily, >0 means selecting all
-separations = [0, 14, 15, 16]
+# separations = [0, 10, 15, 19, 20, 21, 22, 23, 25, 30]  # Reddit
+# separations = [0, 15, 17, 18, 19]  # StockData
+separations = [0, 11, 13, 15, 16, 17, 18, 19, 21, 25]  # LondonBike
+
 scores = np.zeros(len(separations))
 nums = np.zeros(len(separations))
 
@@ -79,10 +82,10 @@ for random_seed in random_seeds:
 
     i = 0
     for (df, sep) in zip(dfs, separations):
+        df.index = range(df.shape[0])
         scores[i] += f1score(df)
         nums[i] += df.shape[0]
         i += 1
-
 
 print('******************')
 for (score, sep) in zip(scores, separations):

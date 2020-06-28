@@ -15,7 +15,6 @@ def uniform_alloc(data, random_seed):
     nodes = []
     for i in range(data.shape[0]):
         nodes.append("".join(random.sample(['a', 'b', 'c', 'd', 'e', 'f'], 3)))  # 3 nodes per update
-
     return pd.DataFrame(nodes)
 
 
