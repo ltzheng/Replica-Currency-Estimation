@@ -64,12 +64,14 @@ def global_probability(T_n, current_time, low, df, train_size, bound):
 
     if T_nplus1_prime > current_time - low:
         # t_n is current
-        exp = ((2 * z * pow(T_nplus1_prime - current_time + low - R_Z_hat - l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2))
+        exp = ((2 * z * pow(T_nplus1_prime - current_time + low - R_Z_hat -
+                            l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2))
         delta = math.exp(-exp)
         return True, 1 - delta, exp
     else:
         # t_n is stale
-        exp = ((2 * z * pow(- T_nplus1_prime + current_time - low - R_Z_hat - l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2))
+        exp = ((2 * z * pow(- T_nplus1_prime + current_time - low - R_Z_hat -
+                            l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2))
         delta = math.exp(-exp)
         return False, 1 - delta, exp
 
@@ -147,8 +149,10 @@ def local_stale_probability(n, z, T_a_1, T_p_n_prime, T_p_nminus1_prime, current
             for i in range(0, j - 1):
                 temp1 = temp1 + phi1 ** i
 
-        delta_zeta = math.exp(- ((2 * z * pow((current_time - val) / temp1 - R_Z_hat - l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2)))
-        delta_n = math.exp(- ((2 * z * pow((val - T_a_1) / temp1 - R_Z_hat - l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2)))
+        delta_zeta = math.exp(- ((2 * z * pow((current_time - val) / temp1 - R_Z_hat -
+                                              l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2)))
+        delta_n = math.exp(- ((2 * z * pow((val - T_a_1) / temp1 - R_Z_hat -
+                                           l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2)) / (l ** 2)))
 
         for j in range(1, val_n):
             prob = prob * (1 - delta_zeta) ** j
