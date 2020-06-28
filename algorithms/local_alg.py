@@ -19,7 +19,11 @@ def train_node(df, current_time, train_size):
     y = training_set.diff().dropna().values.tolist()[1:]
     X = training_set.diff().dropna().values.tolist()[:-1]
     X = [[int(X[i])] for i in range(0, len(X))]
-    model.fit(X, y)
+    try:
+        model.fit(X, y)
+    except ValueError:
+        print('Not enough data to train, please increase test_start_point')
+
     z = len(y)
     y_pred = model.predict(X)
     loss = np.average(abs(y - y_pred))
