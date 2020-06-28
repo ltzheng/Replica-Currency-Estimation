@@ -19,7 +19,7 @@ splitmode = 'uniform'
 # splitmode = 'partition'
 
 repeat = 5
-total_test_times = 5
+total_test_times = 1
 random_seeds = range(0, total_test_times * repeat, repeat)
 
 # test_startpoint should be greater than training_size
@@ -50,7 +50,7 @@ dataset = './dataset/RedditMachineLearning.csv'
 # dataset = './dataset/sensor_same_deleted.csv'
 
 # set separation of x, you can choose arbitrarily, >0 means selecting all
-separations = [0, 1, 3, 5, 7, 9]
+separations = [0, 14, 15, 16]
 scores = np.zeros(len(separations))
 nums = np.zeros(len(separations))
 
@@ -64,7 +64,7 @@ for random_seed in random_seeds:
         df.to_csv('./results/global_result.csv', index=False, header=False)
 
     elif algorithm == 'local':
-        df = local_alg('partition', random_seed, dataset, training_size, test_size, test_startpoint, lamb,
+        df = local_alg(splitmode, random_seed, dataset, training_size, test_size, test_startpoint, lamb,
                        scenario_length, train_fail_num, test_fail_num)
         df.to_csv('./results/local_result.csv', index=False, header=False)
 

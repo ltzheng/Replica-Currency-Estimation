@@ -99,6 +99,8 @@ def local_alg(splitmode, random_seed, filepath, training_size, test_size, test_s
                 flag = 0
                 break
 
+        # print(test_time[1], current_time[2])
+
         if flag:  # current
             prob = 1
             for index, row in preds.loc[unavailable_nodes].iterrows():
@@ -115,12 +117,12 @@ def local_alg(splitmode, random_seed, filepath, training_size, test_size, test_s
         else:  # stale
             temp = 1
             for index, row in preds.loc[unavailable_nodes].iterrows():
-                print(row['Prediction'], row['Probability'])
+                # print(row['Prediction'], row['Probability'])
                 if not row['Prediction']:
                     temp = temp * (1 - row['Probability'])
             prob = 1 - temp
-            print('temp:', temp)
-            print('stale probability:', prob)
+            # print('temp:', temp)
+            # print('stale probability:', prob)
             truth = ground_truth(test_time, current_time)
             if prob != 1:
                 x = -math.log(1 - prob)
