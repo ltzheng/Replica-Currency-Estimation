@@ -75,8 +75,13 @@ def local_alg(splitmode, random_seed, filepath, training_size, test_size, test_s
         preds = pd.DataFrame(np.zeros((len(nodes), 2)), columns=['Prediction', 'Probability'])
         preds.index = nodes
 
-        for index, row in param.loc[list(current_time[2])].iterrows():
-            preds.loc[index, 'Prediction'], T_p_n_prime, T_p_nminus1_prime, n  = local_predict(
+        unavailable_nodes = []
+        for node in nodes:
+            if node not in list(current_time[2]):
+                unavailable_nodes.append(node)
+
+        for index, row in param.loc[unavailable_nodes].iterrows():
+            preds.loc[index, 'Prediction'], T_p_n_prime, T_p_nminus1_prime, n = local_predict(
                 test_time[0], row['T_p_1'], row['t_p_1'], int(current_time[0]), row['coef'], row['intercept'])
             if preds.loc[index, 'Prediction']:
                 preds.loc[index, 'Probability'] = local_current_probability(
@@ -87,28 +92,35 @@ def local_alg(splitmode, random_seed, filepath, training_size, test_size, test_s
                     n, row['z'], int(current_time[0]), T_p_n_prime, int(T_p_nminus1_prime),
                     int(test_time[0]), row['coef'], row['loss'], bound)
 
+        # if any unavailable replica predicts stale, result is stale
         flag = 1
-        for index, row in preds.loc[list(current_time[2])].iterrows():
+        for index, row in preds.loc[unavailable_nodes].iterrows():
             if not row['Prediction']:
                 flag = 0
                 break
-        # print(preds.loc[list(current_time[2])])
-        # print(param.loc[list(current_time[2])])
-        if flag: # current
+
+        if flag:  # current
             prob = 1
-            for index, row in preds.loc[list(current_time[2])].iterrows():
-                prob = prob * row['Probability']
+            for index, row in preds.loc[unavailable_nodes].iterrows():
+                # print(row['Prediction'], row['Probability'])
+                if row['Prediction']:
+                    prob = prob * row['Probability']
             truth = ground_truth(test_time, current_time)
+            # print('current probability:', prob)
             if prob != 1:
                 x = -math.log(1 - prob)
             else:
                 x = 9999
-            result = result.append(pd.DataFrame([True, truth, prob, x]).T)   
-        else: # stale
+            result = result.append(pd.DataFrame([True, truth, prob, x]).T)
+        else:  # stale
             temp = 1
-            for index, row in preds.loc[list(current_time[2])].iterrows():
-                temp = temp * (1 - row['Probability'])
+            for index, row in preds.loc[unavailable_nodes].iterrows():
+                print(row['Prediction'], row['Probability'])
+                if not row['Prediction']:
+                    temp = temp * (1 - row['Probability'])
             prob = 1 - temp
+            print('temp:', temp)
+            print('stale probability:', prob)
             truth = ground_truth(test_time, current_time)
             if prob != 1:
                 x = -math.log(1 - prob)
