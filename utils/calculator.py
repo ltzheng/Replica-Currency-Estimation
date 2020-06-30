@@ -54,7 +54,10 @@ def global_probability(T_n, current_time, low, df, train_size, bound):
     y = training_set.diff().dropna().values.tolist()[1:]
     X = training_set.diff().dropna().values.tolist()[:-1]
     X = [[int(X[i])] for i in range(0, len(X))]
-    model.fit(X, y)
+    try:
+        model.fit(X, y)
+    except ValueError:
+        print('Not enough data to train, please increase test_start_point')
 
     z = len(y)
     y_pred = model.predict(X)
@@ -84,9 +87,12 @@ def local_predict(current_time, T_p_1, t_p_1, T_a_1, phi1, phi0):
     n = 1
 
     while T_p_n_prime_temp <= T_a_1:
-        T_p_n_prime_temp = T_p_1 + calculate_gap_sum(n, phi1, phi0, t_p_1)
+        gap = calculate_gap_sum(n, phi1, phi0, t_p_1)
+        T_p_n_prime_temp = T_p_1 + gap
         # print(T_p_n_prime_temp, T_a_1)
         # print(T_p_n_prime_temp, T_a_1, calculate_gap_sum(n, phi1, phi0, t_p_1))
+        if gap < -1e6:
+            raise TimeoutError('An error occurred: phi0 is too small, please increase back_length')
         T_p_nminus1_prime_temp = T_p_1 + calculate_gap_sum(n - 1, phi1, phi0, t_p_1)
         n = n + 1
 
@@ -99,11 +105,14 @@ def local_predict(current_time, T_p_1, t_p_1, T_a_1, phi1, phi0):
         while T_p_n_prime_temp <= current_time:
             T_p_n_prime_list.append(int(T_p_n_prime_temp))
             n_list.append(n)
-            T_p_n_prime_temp = T_p_1 + calculate_gap_sum(n, phi1, phi0, t_p_1)
+            gap = calculate_gap_sum(n, phi1, phi0, t_p_1)
+            T_p_n_prime_temp = T_p_1 + gap
             # print('T_p_n_prime_temp:', T_p_n_prime_temp)
             # print('phi1:', phi1)
             # print('phi0:', phi0)
             # print('gap:', calculate_gap_sum(n, phi1, phi0, t_p_1))
+            if gap < -1e6:
+                raise TimeoutError('An error occurred: phi0 is too small, please increase back_length')
             T_p_nminus1_prime_temp = T_p_1 + calculate_gap_sum(n - 1, phi1, phi0, t_p_1)
             n = n + 1
 
