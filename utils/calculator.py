@@ -3,7 +3,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import f1_score
 import math
 
-
 '''
 Methods for calculating
 '''
@@ -133,11 +132,11 @@ def local_current_probability(n, z, T_a_1, T_p_n_prime, T_p_nminus1_prime, curre
             temp2 = temp2 + phi1 ** i
 
     delta_zeta = math.exp(- ((2 * z * pow((T_p_n_prime - current_time) / temp1 - R_Z_hat -
-                                l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2))
-                            / (l ** 2)))
+                                          l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2))
+                             / (l ** 2)))
     delta_nminus1 = math.exp(- ((2 * z * pow((T_a_1 - T_p_nminus1_prime) / temp2 - R_Z_hat -
-                                l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2))
-                            / (l ** 2)))
+                                             l * math.sqrt(4 * math.log(math.exp(1) * z / 2) / z), 2))
+                                / (l ** 2)))
 
     for j in range(1, n):
         prob = prob * (1 - delta_zeta) ** j
@@ -169,8 +168,9 @@ def local_stale_probability(n, z, T_a_1, T_p_n_prime, T_p_nminus1_prime, current
             prob = prob * (1 - delta_n) ** j
 
         prob_list.append(prob)
-    for val in prob_list:
-        product = product * (1 - val)
-    prob = 1 - product
+    # for val in prob_list:
+    #     product = product * (1 - val)
+    # prob = 1 - product
+    prob = np.min(prob_list)
 
     return prob
