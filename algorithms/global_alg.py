@@ -46,12 +46,36 @@ def global_alg(splitmode, random_seed, filepath, training_size, test_size, test_
     bound = np.max(bounds)
     print('max bound:', bound)
 
-    for current_time, test_time in zip(current_times, test_times):
-        # print(current_time, test_time)
-        T_n = current_time[1] - current_time[0]
-        truth = ground_truth(test_time, current_time)
-        pred, prob, x = global_probability(T_n, test_time[0], int(current_time[0]), df.iloc[:, 0], training_size, bound)
+    for i in range(test_size):
+        # print(current_times[i], test_times[i])
+        truth = ground_truth(test_times[i], current_times[i])
+        if truth:
+            T_n = current_times[i][0] - current_times[i - 1][0]
+            pred, prob, x = global_probability(T_n, test_times[i][0], int(current_times[i][0]), df.iloc[:, 0], training_size, bound)
+        else:
+            availables = current_times[i][2]
+            k = -1
+            flag = 2
+            t1 = 0
+            t2 = 0
+            tempdf = df[df['Time'] < current_times[i][0]].values.tolist()
+            while flag:
+                for a in availables:
+                    if a in tempdf[k][1]:
+                        if flag == 2:
+                            t2 = tempdf[k][0]
+                            flag = 1
+                            break
+                        else:
+                            t1 = tempdf[k][0]
+                            flag = 0
+                            break
+                k -= 1
+            T_n = t2 - t1
+            pred, prob, x = global_probability(T_n, test_times[i][0], int(t2), df.iloc[:, 0], training_size, bound)
         result = result.append(pd.DataFrame([pred, truth, prob, x]).T)
+        i += 1
+
     end = time.time()
     print('Execution time: ', end - start)
 

@@ -93,8 +93,7 @@ def local_alg(splitmode, random_seed, filepath, training_size, test_size, test_s
                     int(test_time[0]), row['coef'], row['loss'], bound)
             else:
                 preds.loc[index, 'Probability'] = local_stale_probability(
-                    n, row['z'], int(current_time[0]), T_p_n_prime, int(T_p_nminus1_prime),
-                    int(test_time[0]), row['coef'], row['loss'], bound)
+                    n, row['z'], int(current_time[0]), T_p_n_prime, int(test_time[0]), row['coef'], row['loss'], bound)
 
         # if any unavailable replica predicts stale, result is stale
         flag = 1

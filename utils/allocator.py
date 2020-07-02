@@ -93,10 +93,18 @@ def test_set_gen(test_set, test_size, random_seed):
 # sample all node failure times
 def sample_scenario_period(update_times, fail_num, length):
     unavailable_times = []
-    nodes_unavailable_times = random.sample(list(range(int(update_times[0]), int(update_times[len(update_times) - 1]))), fail_num)
-    for time in nodes_unavailable_times:
-        for temptime in range(time, time + length):
-            unavailable_times.append(temptime)
+    total_times = list(range(int(update_times[0]), int(update_times[len(update_times) - 1])))
+    for i in range(fail_num):
+        print('unavailable_times:', len(unavailable_times))
+        nodes_unavailable_times = random.sample(total_times, 1)
+        for time in nodes_unavailable_times:
+            for temptime in range(time, time + length):
+                if temptime in total_times:
+                    total_times.remove(temptime)
+                unavailable_times.append(temptime)
+            for temptime in range(time - length, time):
+                if temptime in total_times:
+                    total_times.remove(temptime)
 
     return unavailable_times
 
@@ -139,7 +147,7 @@ def partition_nodes_gen(random_seed, fail_num, length, update_times):
     write_nodes = []
     for i in range(fail_num):
         random.seed(random_seed)
-        nodes_to_read = random.sample(['a', 'b', 'c', 'd', 'e', 'f'], 3)
+        nodes_to_read = random.sample(available_nodes_list, 3)
         read_nodes.append(nodes_to_read)
         write_node = []
         for node in available_nodes_list:
@@ -193,9 +201,9 @@ def failure_partition_test_set_gen(splitmode, test_set, test_size, random_seed, 
         test_time = random.sample(range(int(current_time[0]), int(current_time[1])), 1)[0]
         test_times.append(test_time)
     # merge current_times and test_times to apply scenarios
-    current_times = pd.DataFrame(current_times)
+    current_times = pd.DataFrame(current_times[0:test_size])
     current_times.columns = ['time', 'time2']
-    test_times = pd.DataFrame(test_times)
+    test_times = pd.DataFrame(test_times[0:test_size])
     test_times.columns = ['time']
     current_times['type'] = 'current'
     test_times['type'] = 'test'
@@ -203,9 +211,9 @@ def failure_partition_test_set_gen(splitmode, test_set, test_size, random_seed, 
     df.index = list(range(df.shape[0]))
 
     if splitmode == 'failure':
-        available_nodes = partition_nodes_gen(random_seed, test_fail_num, length, df.iloc[:, 0].values.tolist())
-    elif splitmode == 'partition':
         available_nodes = failure_nodes_gen(random_seed, test_fail_num, length, df.iloc[:, 0].values.tolist())
+    elif splitmode == 'partition':
+        available_nodes = partition_nodes_gen(random_seed, test_fail_num, length, df.iloc[:, 0].values.tolist())
     else:
         raise NotImplementedError
 

@@ -66,8 +66,9 @@ def failure_split(random_seed, filepath, test_size, test_startpoint, length, tra
     random.seed(random_seed)
     df = pd.read_csv(filepath, header=None)
     df = df.iloc[:, 0]
-    available_nodes = failure_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
-    df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
+    df = pd.concat([df, uniform_alloc(df, random_seed)], axis=1).dropna()
+    # available_nodes = failure_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
+    # df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
     df.columns = ['Time', 'Nodes']
     df.index = range(len(df))
 
@@ -84,9 +85,9 @@ def partition_split(random_seed, filepath, test_size, test_startpoint, length, t
     random.seed(random_seed)
     df = pd.read_csv(filepath, header=None)
     df = df.iloc[:, 0]
-
-    available_nodes = partition_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
-    df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
+    df = pd.concat([df, uniform_alloc(df, random_seed)], axis=1).dropna()
+    # available_nodes = partition_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
+    # df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
     df.columns = ['Time', 'Nodes']
     df.index = range(len(df))
 

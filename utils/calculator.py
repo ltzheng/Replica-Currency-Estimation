@@ -146,7 +146,7 @@ def local_current_probability(n, z, T_a_1, T_p_n_prime, T_p_nminus1_prime, curre
     return prob
 
 
-def local_stale_probability(n, z, T_a_1, T_p_n_prime, T_p_nminus1_prime, current_time, phi1, loss, bound):
+def local_stale_probability(n, z, T_a_1, T_p_n_prime, current_time, phi1, loss, bound):
     R_Z_hat, l = loss, bound
     temp1 = 0
     prob = 1
