@@ -46,7 +46,7 @@ def global_alg(splitmode, random_seed, filepath, training_size, test_size, test_
     bound = np.max(bounds)
     print('max bound:', bound)
 
-    for current_time, test_time in zip(current_times,test_times):
+    for current_time, test_time in zip(current_times, test_times):
         # print(current_time, test_time)
         T_n = current_time[1] - current_time[0]
         truth = ground_truth(test_time, current_time)
