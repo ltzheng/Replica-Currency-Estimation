@@ -13,9 +13,11 @@ Global algorithm for replica currency estimation
 
 
 def global_alg(splitmode, random_seed, filepath, training_size, test_size, test_startpoint, lamb,
-               scenario_length, train_fail_num, test_fail_num):
+               scenario_length, train_fail_num, test_fail_num, available_num):
 
-    if splitmode == 'uniform':
+    if splitmode == 'multi':
+        df, current_times, test_times = uniform_split(random_seed, filepath, test_size, test_startpoint, available_num)
+    elif splitmode == 'uniform':
         df, current_times, test_times = uniform_split(random_seed, filepath, test_size, test_startpoint)
     elif splitmode == 'exponential':
         df, current_times, test_times = exponential_split(random_seed, filepath, test_size, test_startpoint, lamb)

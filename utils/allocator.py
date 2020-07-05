@@ -10,11 +10,11 @@ Allocate nodes for each update in different scenarios
 
 
 # uniform allocation, i.e., scenario 1
-def uniform_alloc(data, random_seed):
+def uniform_alloc(data, random_seed, available_num):
     random.seed(random_seed)
     nodes = []
     for i in range(data.shape[0]):
-        nodes.append("".join(random.sample(['a', 'b', 'c', 'd', 'e', 'f'], 3)))  # 3 nodes per update
+        nodes.append("".join(random.sample(['a', 'b', 'c', 'd', 'e', 'f'], available_num)))  # available nodes per update
     return pd.DataFrame(nodes)
 
 

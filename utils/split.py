@@ -11,17 +11,17 @@ Split test set
 '''
 
 
-def uniform_split(random_seed, filepath, test_size, test_startpoint):
+def uniform_split(random_seed, filepath, test_size, test_startpoint, available_num=3):
     random.seed(random_seed)
     df = pd.read_csv(filepath, header=None)
     df = df.iloc[:, 0]
-    df = pd.concat([df, uniform_alloc(df, random_seed)], axis=1).dropna()
+    df = pd.concat([df, uniform_alloc(df, random_seed, available_num)], axis=1).dropna()
     df.columns = ['Time', 'Nodes']
     df.index = range(len(df))
     test_set = df.iloc[test_startpoint:]
     test_set.index = range(len(test_set))
     current_times, test_times = test_set_gen(test_set, test_size, random_seed)
-    test_times = pd.concat([test_times, uniform_alloc(test_times, random_seed)], axis=1).dropna()
+    test_times = pd.concat([test_times, uniform_alloc(test_times, random_seed, available_num)], axis=1).dropna()
     current_times = np.array(current_times)
     test_times = np.array(test_times)
 
@@ -66,7 +66,7 @@ def failure_split(random_seed, filepath, test_size, test_startpoint, length, tra
     random.seed(random_seed)
     df = pd.read_csv(filepath, header=None)
     df = df.iloc[:, 0]
-    df = pd.concat([df, uniform_alloc(df, random_seed)], axis=1).dropna()
+    df = pd.concat([df, uniform_alloc(df, random_seed, 3)], axis=1).dropna()
     # available_nodes = failure_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
     # df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
     df.columns = ['Time', 'Nodes']
@@ -85,8 +85,8 @@ def partition_split(random_seed, filepath, test_size, test_startpoint, length, t
     random.seed(random_seed)
     df = pd.read_csv(filepath, header=None)
     df = df.iloc[:, 0]
-    df = pd.concat([df, uniform_alloc(df, random_seed)], axis=1).dropna()
-    # available_nodes = partition_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
+    df = pd.concat([df, uniform_alloc(df, random_seed, 3)], axis=1).dropna()
+    # available_nodes = failure_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
     # df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
     df.columns = ['Time', 'Nodes']
     df.index = range(len(df))
