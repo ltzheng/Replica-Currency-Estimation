@@ -12,7 +12,11 @@ from utils.calculator import f1score
 
 ################## Hyperparameter Setting #################
 
-splitmode = 'uniform'
+# splitmode = 'multi'
+# set for multi scenario
+available_num = 3
+
+# splitmode = 'uniform'
 # splitmode = 'exponential'
 # splitmode = 'poisson'
 # splitmode = 'failure'
@@ -49,25 +53,31 @@ dataset = './dataset/LondonBike.csv'
 # dataset = './dataset/BankTransaction.csv'
 # dataset = './dataset/sensor_same_deleted.csv'
 
+separated_by = 'value'  # by greater than given value
 # set separation of x, you can choose arbitrarily, >0 means selecting all
-# separations = [0, 10, 15, 19, 20, 21, 22, 23, 25, 30]  # Reddit
+separations = [0, 35, 39, 43, 45]  # btcusd
+# separations = [0, 10, 15, 16, 17, 18, 19, 20, 25, 30, 35]  # Reddit
 # separations = [0, 15, 17, 18, 19]  # StockData
-separations = [0, 11, 13, 15, 16, 17, 18, 19, 21, 25]  # LondonBike
+# separations = [0, 11, 13, 15, 16, 17, 18, 19, 21, 25]  # LondonBike & Reddit global
+
+# separated_by = 'proportion'
+# separations = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
 
 scores = np.zeros(len(separations))
 nums = np.zeros(len(separations))
+confidence = np.zeros(len(separations))
 
 for random_seed in random_seeds:
     print('******************')
     print('random_seed:', random_seed)
 
     if algorithm == 'global':
-        df = global_alg(splitmode, random_seed, dataset, training_size, test_size, test_startpoint, lamb,
-                        scenario_length, train_fail_num, test_fail_num)
+        df = global_alg(splitmode, random_seed, dataset, back_length, test_size, test_startpoint, lamb,
+                        scenario_length, train_fail_num, test_fail_num, available_num)
         df.to_csv('./results/global_result.csv', index=False, header=False)
 
     elif algorithm == 'local':
-        df = local_alg(splitmode, random_seed, dataset, training_size, test_size, test_startpoint, lamb,
+        df = local_alg(splitmode, random_seed, dataset, back_length, test_size, test_startpoint, lamb,
                        scenario_length, train_fail_num, test_fail_num)
         df.to_csv('./results/local_result.csv', index=False, header=False)
 
@@ -75,13 +85,28 @@ for random_seed in random_seeds:
         raise NotImplementedError
 
     df = df.sort_values(by='x', ascending=True)
+    df.index = range(df.shape[0])
 
     dfs = []
-    for sep in separations:
-        dfs.append((df[df['x'] > sep]))
+    if separated_by == 'value':
+        for sep in separations:
+            dfs.append((df[df['x'] > sep]))
+    elif separated_by == 'proportion':
+        i = 0
+        step = 0
+        for sep in separations:
+            dfs.append((df.iloc[int(df.shape[0] * sep):int(df.shape[0] * 0.7)]))
+            confidence[i] = df.loc[int(df.shape[0] * sep), 'x']
+            # dfs.append((df.iloc[step:int(df.shape[0] * sep)]))
+            # step = int(df.shape[0] * sep)
+            # print(step)
+            # confidence[i] = df.loc[step - 1, 'x']
+            i += 1
+    else:
+        raise NotImplementedError
 
     i = 0
-    for (df, sep) in zip(dfs, separations):
+    for df in dfs:
         df.index = range(df.shape[0])
         scores[i] += f1score(df)
         nums[i] += df.shape[0]
