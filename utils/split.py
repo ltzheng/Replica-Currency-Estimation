@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import random
 from utils.allocator import uniform_alloc, test_set_gen, exponential_alloc, poisson_alloc, available_nodes_alloc, \
-                                partition_nodes_gen, failure_nodes_gen, failure_partition_test_set_gen
+                                partition_nodes_gen, failure_nodes_gen, failure_partition_test_set_gen, frequency_test_set_gen
 # pd.set_option('display.max_rows', None)
 
 
@@ -94,6 +94,24 @@ def partition_split(random_seed, filepath, test_size, test_startpoint, length, t
     test_set = df.iloc[test_startpoint:]
     test_set.index = range(len(test_set))
     current_times, test_times = failure_partition_test_set_gen('partition', test_set, test_size, random_seed, test_fail_num, length)
+    current_times = np.array(current_times)
+    test_times = np.array(test_times)
+
+    return df, current_times, test_times
+
+
+def frequency_split(random_seed, filepath, test_size, test_startpoint, length, scenario_num, frequency_normal, frequency_low):
+    random.seed(random_seed)
+    df = pd.read_csv(filepath, header=None)
+    df = df.iloc[:, 0]
+    df = pd.concat([df, uniform_alloc(df, random_seed, 3)], axis=1).dropna()
+    df.columns = ['Time', 'Nodes']
+    df.index = range(len(df))
+
+    test_set = df.iloc[test_startpoint:]
+    test_set.index = range(len(test_set))
+    current_times, test_times = frequency_test_set_gen(random_seed, test_set, test_size, scenario_num,
+                                                       length, frequency_normal, frequency_low)
     current_times = np.array(current_times)
     test_times = np.array(test_times)
 
