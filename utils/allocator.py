@@ -68,7 +68,10 @@ def available_nodes_alloc(available_nodes, random_seed):
     random.seed(random_seed)
     nodes = []
     for available_node in available_nodes:
-        tempnodes = random.sample(available_node, 3)
+        if len(available_node) == 6:
+            tempnodes = random.sample(available_node, 3)
+        else:
+            tempnodes = random.sample(available_node, 1)
         nodes.append("".join(tempnodes))
     return pd.DataFrame(nodes)
 
@@ -90,23 +93,52 @@ def test_set_gen(test_set, test_size, random_seed):
     return pd.DataFrame(current_times[0:test_size]), pd.DataFrame(test_times[0:test_size])
 
 
-# sample all node failure times
-def sample_scenario_period(update_times, fail_num, length):
-    unavailable_times = []
+# sample times for scenarios
+def sample_scenario_period(update_times, scenario_num, length):
+    scenario_periods = []
     total_times = list(range(int(update_times[0]), int(update_times[len(update_times) - 1])))
-    for i in range(fail_num):
-        print('unavailable_times:', len(unavailable_times))
-        nodes_unavailable_times = random.sample(total_times, 1)
-        for time in nodes_unavailable_times:
-            for temptime in range(time, time + length):
-                if temptime in total_times:
-                    total_times.remove(temptime)
-                unavailable_times.append(temptime)
-            for temptime in range(time - length, time):
-                if temptime in total_times:
-                    total_times.remove(temptime)
+    for i in range(scenario_num):
+        # print('unavailable_times:', len(unavailable_times))
+        scenario_time = random.sample(total_times, 1)
+        for timepoint in scenario_time:
+            for time in range(timepoint - length, timepoint + length):
+                if time in total_times:
+                    total_times.remove(time)
+                scenario_periods.append(time)
 
-    return unavailable_times
+    return scenario_periods
+
+
+# frequency changing scenario
+def frequency_test_set_gen(random_seed, test_set, test_size, scenario_num, length, frequency_normal, frequency_low):
+    random.seed(random_seed)
+    current_times = []
+    test_times = []
+    frequency_bit = 0
+
+    for i in range(test_set.shape[0] - 1):
+        if frequency_bit % 3 == 0: # high frequency
+            current_times.append([test_set.iloc[i, 0], test_set.iloc[i + 1, 0], test_set.iloc[i, 1]])
+        elif frequency_bit % 3 == 1: # normal scenario
+            if i % frequency_normal == 0 or i % frequency_bit == int(frequency_normal / 2):
+                current_times.append([test_set.iloc[i, 0], test_set.iloc[i + 1, 0], test_set.iloc[i, 1]])
+        else: # low frequency
+            if i % frequency_low == 0 or i % frequency_bit == int(frequency_low / 2):
+                current_times.append([test_set.iloc[i, 0], test_set.iloc[i + 1, 0], test_set.iloc[i, 1]])
+        if i % length == 0:
+            frequency_bit += 1
+        if (frequency_bit * 2 / 3) >= scenario_num:
+            frequency_bit = 1
+
+    for current_time in current_times:
+        test_time = random.sample(range(int(current_time[0]), int(current_time[1])), 1)[0]
+        test_times.append(test_time)
+        if len(test_times) >= test_size:
+            break
+    test_times = pd.DataFrame(test_times)
+    # print('len(test_times):', len(test_times))
+    test_times = pd.concat([test_times, uniform_alloc(test_times, random_seed, 3)], axis=1).dropna()
+    return pd.DataFrame(current_times[0:test_size]), pd.DataFrame(test_times[0:test_size])
 
 
 # for node failure scenario to generate available nodes for each update
@@ -124,7 +156,6 @@ def failure_nodes_gen(random_seed, fail_num, length, update_times):
         random.seed(random_seed)
         nodes.append(random.sample(available_nodes_list, 3))
     for update_time in update_times:
-        available_node = []
         if int(update_time) in unavailable_times:
             count += 1
             available_nodes.append(nodes[nodecount])
@@ -136,16 +167,16 @@ def failure_nodes_gen(random_seed, fail_num, length, update_times):
 
 
 # for network partition scenario to generate available nodes for each update
-def partition_nodes_gen(random_seed, fail_num, length, update_times):
+def partition_nodes_gen(random_seed, scenario_num, length, update_times):
     random.seed(random_seed)
     available_nodes_list = ['a', 'b', 'c', 'd', 'e', 'f']
 
-    unavailable_times = sample_scenario_period(update_times, fail_num, length)
+    unavailable_times = sample_scenario_period(update_times, scenario_num, length)
 
     # 3 nodes to write and other 3 to read
     read_nodes = []
     write_nodes = []
-    for i in range(fail_num):
+    for i in range(scenario_num):
         random.seed(random_seed)
         nodes_to_read = random.sample(available_nodes_list, 3)
         read_nodes.append(nodes_to_read)
@@ -189,7 +220,7 @@ def partition_nodes_gen(random_seed, fail_num, length, update_times):
 
 
 # for network failure & node partition scenario to generate current_times and test_times
-def failure_partition_test_set_gen(splitmode, test_set, test_size, random_seed, test_fail_num, length):
+def failure_partition_test_set_gen(splitmode, test_set, test_size, random_seed, scenario_num, length):
     random.seed(random_seed)
     current_times = []
     test_times = []
@@ -211,9 +242,9 @@ def failure_partition_test_set_gen(splitmode, test_set, test_size, random_seed, 
     df.index = list(range(df.shape[0]))
 
     if splitmode == 'failure':
-        available_nodes = failure_nodes_gen(random_seed, test_fail_num, length, df.iloc[:, 0].values.tolist())
+        available_nodes = failure_nodes_gen(random_seed, scenario_num, length, df.iloc[:, 0].values.tolist())
     elif splitmode == 'partition':
-        available_nodes = partition_nodes_gen(random_seed, test_fail_num, length, df.iloc[:, 0].values.tolist())
+        available_nodes = partition_nodes_gen(random_seed, scenario_num, length, df.iloc[:, 0].values.tolist())
     else:
         raise NotImplementedError
 
