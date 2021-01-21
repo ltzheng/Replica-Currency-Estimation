@@ -8,7 +8,23 @@ Methods for calculating
 '''
 
 
-def calculate_gap_sum(n, phi1, phi0, t_p_1):
+def loss_function(y, y_pred):
+    loss = 0
+    for i in range(len(y)):
+        loss += y[i] - y_pred[i]
+    loss = loss / len(y)
+    return loss
+
+
+def max_function(y, y_pred):
+    result = 0
+    for i in range(len(y)):
+        if result < abs(y[i] - y_pred[i]):
+            result = abs(y[i] - y_pred[i])
+    return result
+
+
+def calculate_gap_sum(n, model, t_p_1):
     if n <= 1:
         return 0
     gap_sum = 0
@@ -47,22 +63,25 @@ def f1score(df):
     return f1_score(truth, pred)
 
 
-def global_probability(T_n, current_time, low, df, train_size, bound):
+def global_probability(T_n, current_time, low, df, train_size, bound, X_size):
     training_set = df[df.iloc[:] < current_time].iloc[-train_size:]
     model = LinearRegression()
-    y = training_set.diff().dropna().values.tolist()[1:]
-    X = training_set.diff().dropna().values.tolist()[:-1]
+    y = training_set.diff().dropna().values.tolist()[X_size:]
+    y = [[int(y[i])] for i in range(0, len(y))]
+    X = training_set.diff().dropna().values.tolist()[-len(y)-1:-1]
     X = [[int(X[i])] for i in range(0, len(X))]
-    try:
-        model.fit(X, y)
-    except ValueError:
-        print('Not enough data to train, please increase test_start_point')
+    for k in range(2, X_size + 1):
+        tempX = training_set.diff().dropna().values.tolist()[-len(y)-k:-k]
+        tempX = [int(tempX[i]) for i in range(0, len(tempX))]
+        for vector, value in zip(X, tempX):
+            vector.append(value)
+    model.fit(X, y)
 
     z = len(y)
     y_pred = model.predict(X)
-    loss = np.average(abs(y - y_pred))
+    loss = loss_function(y, y_pred)
     R_Z_hat, l = loss, bound
-    T_nplus1_prime = int(model.coef_ * T_n + model.intercept_)
+    T_nplus1_prime = model.predict(T_n)
 
     if T_nplus1_prime > current_time - low:
         # t_n is current
@@ -78,7 +97,7 @@ def global_probability(T_n, current_time, low, df, train_size, bound):
         return False, 1 - delta, exp
 
 
-def local_predict(current_time, T_p_1, t_p_1, T_a_1, phi1, phi0):
+def local_predict(current_time, T_p_1, t_p_1, T_a_1, model):
     T_p_n_prime_list = []
     n_list = []
     T_p_n_prime_temp = T_p_1
@@ -86,13 +105,11 @@ def local_predict(current_time, T_p_1, t_p_1, T_a_1, phi1, phi0):
     n = 1
 
     while T_p_n_prime_temp <= T_a_1:
-        gap = calculate_gap_sum(n, phi1, phi0, t_p_1)
+        gap = calculate_gap_sum(n, model, t_p_1)
         T_p_n_prime_temp = T_p_1 + gap
-        # print(T_p_n_prime_temp, T_a_1)
-        # print(T_p_n_prime_temp, T_a_1, calculate_gap_sum(n, phi1, phi0, t_p_1))
         if gap < -1e6:
             raise TimeoutError('An error occurred: phi0 is too small, please increase back_length')
-        T_p_nminus1_prime_temp = T_p_1 + calculate_gap_sum(n - 1, phi1, phi0, t_p_1)
+        T_p_nminus1_prime_temp = T_p_1 + calculate_gap_sum(n - 1, model, t_p_1)
         n = n + 1
 
     pred = T_p_n_prime_temp >= current_time
@@ -100,19 +117,14 @@ def local_predict(current_time, T_p_1, t_p_1, T_a_1, phi1, phi0):
     if pred:
         return pred, T_p_n_prime_temp, T_p_nminus1_prime_temp, n
     else:
-        # T_a_1 < T_p_n_prime_temp < current_time
         while T_p_n_prime_temp <= current_time:
             T_p_n_prime_list.append(int(T_p_n_prime_temp))
             n_list.append(n)
-            gap = calculate_gap_sum(n, phi1, phi0, t_p_1)
+            gap = calculate_gap_sum(n, model, t_p_1)
             T_p_n_prime_temp = T_p_1 + gap
-            # print('T_p_n_prime_temp:', T_p_n_prime_temp)
-            # print('phi1:', phi1)
-            # print('phi0:', phi0)
-            # print('gap:', calculate_gap_sum(n, phi1, phi0, t_p_1))
             if gap < -1e6:
                 raise TimeoutError('An error occurred: phi0 is too small, please increase back_length')
-            T_p_nminus1_prime_temp = T_p_1 + calculate_gap_sum(n - 1, phi1, phi0, t_p_1)
+            T_p_nminus1_prime_temp = T_p_1 + calculate_gap_sum(n - 1, model, t_p_1)
             n = n + 1
 
         return pred, T_p_n_prime_list, T_p_nminus1_prime_temp, n_list
@@ -151,7 +163,7 @@ def local_stale_probability(n, z, T_a_1, T_p_n_prime, current_time, phi1, loss, 
     temp1 = 0
     prob = 1
     prob_list = []
-    product = 1
+    # product = 1
     for val_n, val in zip(n, T_p_n_prime):
         for j in range(2, val_n + 1):
             for i in range(0, j - 1):

@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import random
-from utils.allocator import uniform_alloc, test_set_gen, exponential_alloc, poisson_alloc, available_nodes_alloc, \
-                                partition_nodes_gen, failure_nodes_gen, failure_partition_test_set_gen, frequency_test_set_gen
+from utils.allocator import uniform_alloc, test_set_gen, exponential_alloc, poisson_alloc, \
+    failure_partition_test_set_gen, frequency_test_set_gen
 # pd.set_option('display.max_rows', None)
 
 
@@ -62,13 +62,11 @@ def poisson_split(random_seed, filepath, test_size, test_startpoint, lamb):
     return df, current_times, test_times
 
 
-def failure_split(random_seed, filepath, test_size, test_startpoint, length, train_fail_num, test_fail_num):
+def failure_split(random_seed, filepath, test_size, test_startpoint, length, test_fail_num):
     random.seed(random_seed)
     df = pd.read_csv(filepath, header=None)
     df = df.iloc[:, 0]
     df = pd.concat([df, uniform_alloc(df, random_seed, 3)], axis=1).dropna()
-    # available_nodes = failure_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
-    # df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
     df.columns = ['Time', 'Nodes']
     df.index = range(len(df))
 
@@ -81,13 +79,11 @@ def failure_split(random_seed, filepath, test_size, test_startpoint, length, tra
     return df, current_times, test_times
 
 
-def partition_split(random_seed, filepath, test_size, test_startpoint, length, train_fail_num, test_fail_num):
+def partition_split(random_seed, filepath, test_size, test_startpoint, length, test_fail_num):
     random.seed(random_seed)
     df = pd.read_csv(filepath, header=None)
     df = df.iloc[:, 0]
     df = pd.concat([df, uniform_alloc(df, random_seed, 3)], axis=1).dropna()
-    # available_nodes = failure_nodes_gen(random_seed, train_fail_num, length, df.values.tolist())
-    # df = pd.concat([df, available_nodes_alloc(available_nodes, random_seed)], axis=1).dropna()
     df.columns = ['Time', 'Nodes']
     df.index = range(len(df))
 
