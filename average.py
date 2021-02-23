@@ -107,7 +107,7 @@ if __name__ == '__main__':
                              '0 means selecting all, e.g., 0, 35, 39, 43, 45 for btcusd'
                              'separated by proportion: set separation according to proportion in arg separation, '
                              'e.g., 0, 0.1, 0.2, 0.3, 0.4, 0.5')
-    parser.add_argument('--log-nums', type=bool, default=False)
+    parser.add_argument('--log-nums', action='store_true')
 
     args = parser.parse_args()
 

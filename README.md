@@ -24,9 +24,7 @@ and we learn from the history in process model, and this model is shared with ot
 
 ## Model
 
-Consider an autoregressive model,which predicts the occurrence
-of next update according to the previous adjacent
-updates. There are global and local algorithms here.
+Consider an autoregressive model, which predicts the occurrence of next update according to the previous adjacent updates. There are global and local algorithms here.
 
 To run the model with default setting:
 ```bash
